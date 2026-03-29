@@ -201,17 +201,24 @@ button {
 }
 
 .segmented {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
 .segment {
-  padding: 11px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.62);
   color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 600;
   cursor: pointer;
   transition:
     transform 180ms ease,
@@ -236,8 +243,8 @@ button {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
   border-color: transparent;
   color: #fffdf8;
-  box-shadow: 0 12px 22px rgba(255, 107, 107, 0.4);
-  animation: pulseGlow 2s ease-in-out infinite;
+  box-shadow: 0 10px 18px rgba(255, 107, 107, 0.26);
+  animation: none;
 }
 
 @keyframes pulseGlow {
@@ -246,10 +253,11 @@ button {
 }
 
 .segment.is-playing {
-  background: linear-gradient(135deg, #1f2f39 0%, #35576a 100%);
-  border-color: transparent;
-  color: #fffdf8;
-  box-shadow: 0 12px 22px rgba(31, 47, 57, 0.22);
+  border-color: rgba(255, 107, 107, 0.55);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  box-shadow: 0 8px 18px rgba(255, 107, 107, 0.18);
+  animation: none;
 }
 
 .segment:disabled {
@@ -259,21 +267,66 @@ button {
   box-shadow: none;
 }
 
+#deck-type-group {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#font-group {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#action-group {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#action-group .segment {
+  min-height: 48px;
+}
+
 .audio-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  justify-content: center;
+}
+
+.audio-trigger > span:last-child {
+  flex: 1 1 auto;
+  text-align: center;
 }
 
 .audio-button-icon {
   display: inline-flex;
-  width: 18px;
-  height: 18px;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--accent-deep);
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .audio-button-icon svg {
   width: 100%;
   height: 100%;
+}
+
+.audio-trigger.is-playing .audio-button-icon {
+  background: linear-gradient(135deg, var(--accent) 0%, #ff8b66 100%);
+  color: #fff8ed;
+  box-shadow: 0 8px 18px rgba(255, 107, 107, 0.28);
+  animation: audioPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes audioPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
 }
 
 .audio-status {
@@ -647,35 +700,49 @@ button {
 
 .tips {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   padding: 16px;
   border-radius: 24px;
 }
 
 .tip-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 8px;
+  padding: 14px 12px;
+  min-height: 88px;
   border-radius: 20px;
   background: var(--panel-strong);
   min-width: 0;
+  border: 1px solid rgba(29, 43, 54, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .tip-card p {
   margin: 0;
-  font-size: 0.96rem;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: var(--muted);
+  text-align: center;
 }
 
 .tip-kbd {
-  min-width: 48px;
-  padding: 9px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 34px;
+  padding: 9px 12px;
   border-radius: 14px;
   background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   color: #fff8ed;
   text-align: center;
+  white-space: nowrap;
   font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1;
   box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
   animation: keyFloat 2s ease-in-out infinite;
 }
@@ -806,6 +873,11 @@ button {
     grid-template-columns: 1fr;
   }
 
+  #font-group,
+  #action-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .tips {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -885,8 +957,11 @@ button {
     display: none;
   }
 
-  .tip-kbd {
-    min-width: 72px;
+  .segmented,
+  #deck-type-group,
+  #font-group,
+  #action-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .list-chip {
