@@ -409,10 +409,9 @@ const randomButton = document.querySelector("#random-button");
 const fullscreenButton = document.querySelector("#fullscreen-button");
 const englishAudioBaseUrl = "./audio/english/";
 const pinyinAudioBaseUrl = "./audio/pinyin/";
-const speechSynthesisApi = window.speechSynthesis ?? null;
+const phoneticAudioBaseUrl = "./audio/phonetic/";
 const audioCache = new Map();
 let activeAudio = null;
-let activeUtterance = null;
 let audioStatusTimer = 0;
 let audioPlayRequestId = 0;
 
@@ -675,26 +674,37 @@ function normalizeAudioKey(text) {
   return text.toLowerCase().replace(/ü/g, "v");
 }
 
-function supportsSpeechSynthesis() {
-  return Boolean(speechSynthesisApi && typeof SpeechSynthesisUtterance !== "undefined");
-}
+function normalizePhoneticAudioKey(text) {
+  const map = {
+    "iː": "i-long",
+    "ɪ": "i-short",
+    "æ": "ae",
+    "ʌ": "uh",
+    "ɑː": "a-long",
+    "ɒ": "o-short",
+    "ɔː": "aw-long",
+    "ʊ": "u-short",
+    "uː": "u-long",
+    "ɜː": "er-long",
+    "ə": "schwa",
+    "eɪ": "ay",
+    "aɪ": "eye",
+    "ɔɪ": "oy",
+    "əʊ": "oh",
+    "aʊ": "ow",
+    "ɪə": "ear",
+    "eə": "air",
+    "ʊə": "oor",
+    "θ": "th-unvoiced",
+    "ð": "th-voiced",
+    "ʃ": "sh",
+    "ʒ": "zh",
+    "ŋ": "ng",
+    "tʃ": "ch",
+    "dʒ": "j-sound",
+  };
 
-function getPreferredSpeechVoice() {
-  if (!supportsSpeechSynthesis()) {
-    return null;
-  }
-
-  const voices = speechSynthesisApi.getVoices();
-  if (!voices.length) {
-    return null;
-  }
-
-  return (
-    voices.find((voice) => voice.lang === "en-US") ??
-    voices.find((voice) => voice.lang === "en-GB") ??
-    voices.find((voice) => voice.lang?.startsWith("en-")) ??
-    null
-  );
+  return map[text] ?? text.toLowerCase();
 }
 
 function getCurrentAudioConfig() {
@@ -723,11 +733,13 @@ function getCurrentAudioConfig() {
   }
 
   if (state.activeDeck === "phonetic") {
+    const phoneticKey = normalizePhoneticAudioKey(item.audio ?? item.primary);
     return {
-      type: "speech",
-      key: item.primary,
+      type: "file",
+      cacheKey: `phonetic:${phoneticKey}`,
+      key: phoneticKey,
       label: item.primary,
-      text: item.detail ?? item.primary,
+      src: `${phoneticAudioBaseUrl}${phoneticKey}.mp3`,
     };
   }
 
@@ -763,11 +775,6 @@ function resetAudioButtonState() {
 function stopCurrentAudio() {
   audioPlayRequestId += 1;
 
-  if (speechSynthesisApi) {
-    speechSynthesisApi.cancel();
-  }
-  activeUtterance = null;
-
   if (!activeAudio) {
     resetAudioButtonState();
     return;
@@ -781,7 +788,7 @@ function stopCurrentAudio() {
 
 function renderAudioButton() {
   const audioConfig = getCurrentAudioConfig();
-  const isPlayable = Boolean(audioConfig?.key) && (audioConfig.type !== "speech" || supportsSpeechSynthesis());
+  const isPlayable = Boolean(audioConfig?.key);
 
   audioButton.disabled = !isPlayable;
   audioButton.title = isPlayable ? `播放 ${audioConfig.label} 的读音` : "当前卡片没有可播放的发音";
@@ -791,45 +798,8 @@ function renderAudioButton() {
 
 function playCurrentAudio() {
   const audioConfig = getCurrentAudioConfig();
-  if (!audioConfig?.key || (audioConfig.type === "speech" && !supportsSpeechSynthesis())) {
+  if (!audioConfig?.key) {
     showAudioStatus("当前卡片没有可播放的发音。", "error");
-    return;
-  }
-
-  if (audioConfig.type === "speech") {
-    stopCurrentAudio();
-
-    const utterance = new SpeechSynthesisUtterance(audioConfig.text);
-    const voice = getPreferredSpeechVoice();
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-    } else {
-      utterance.lang = "en-US";
-    }
-    utterance.rate = 0.72;
-    utterance.pitch = 1;
-    activeUtterance = utterance;
-    audioButton.classList.add("is-playing");
-    showAudioStatus("");
-
-    utterance.addEventListener("end", () => {
-      if (activeUtterance === utterance) {
-        activeUtterance = null;
-        resetAudioButtonState();
-      }
-    });
-
-    utterance.addEventListener("error", () => {
-      if (activeUtterance === utterance) {
-        activeUtterance = null;
-        resetAudioButtonState();
-        showAudioStatus("播放失败，请重试。", "error");
-      }
-    });
-
-    speechSynthesisApi.cancel();
-    speechSynthesisApi.speak(utterance);
     return;
   }
 

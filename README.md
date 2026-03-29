@@ -35,7 +35,7 @@
 - 随机抽取卡片
 - 播放当前发音
 - 卡片全屏展示
-- 音标卡片支持浏览器语音合成朗读示例词
+- 音标卡片支持本地 MP3 发音资源播放
 
 ### 展示能力
 
@@ -115,6 +115,15 @@ Build output directory: .
 - 这是一个直接发布静态资源的 Pages 项目
 
 ## 资源文件说明
+
+### `audio/phonetic/`
+
+英语音标使用独立的静态 MP3 资源目录，文件名与音标一一映射。
+如需重新生成，可运行：
+
+```bash
+python scripts/generate_phonetic_audio.py
+```
 
 ### `_headers`
 
