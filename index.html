@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="专为儿童设计的互动式字母和拼音学习网站，支持汉语拼音声母韵母和英文字母大小写学习，配有标准发音和书写指导" />
+    <meta name="keywords" content="拼音学习,英文字母,儿童教育,汉语拼音,声母韵母,字母卡片" />
+    <meta name="author" content="Alphabet & Pinyin Cards" />
+    <title>🎨 字母与拼音卡片 - 儿童学习乐园</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="aurora aurora-one"></div>
+      <div class="aurora aurora-two"></div>
+
+      <main class="app">
+        <section class="hero">
+          <p class="eyebrow">🌟 Alphabet & Pinyin Cards 🌟</p>
+          <h1>字母卡片练习</h1>
+          <p class="hero-copy">
+            🎯 支持英文字母的大写、小写、大小写，也支持汉语拼音的声母与韵母。
+            👆 点击卡片或使用键盘上下键快速切换，让学习变得更有趣！
+          </p>
+        </section>
+
+        <div class="workspace-layout">
+          <div class="sidebar-column">
+            <section class="panel">
+              <div class="control-group">
+                <span class="control-label">卡片类型</span>
+                <div class="segmented" id="deck-type-group" aria-label="卡片类型"></div>
+                <div class="deck-meta">
+                  <p class="meta-label" id="deck-title"></p>
+                  <p class="meta-description" id="deck-description"></p>
+                  <p class="counter" id="card-counter" aria-live="polite"></p>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <span class="control-label">显示模式</span>
+                <div class="segmented" id="deck-mode-group" aria-label="显示模式"></div>
+              </div>
+
+              <div class="control-group">
+                <span class="control-label">卡片字体</span>
+                <div class="segmented" id="font-group" aria-label="卡片字体"></div>
+              </div>
+
+              <div class="control-group">
+                <span class="control-label">阅读操作</span>
+                <div class="segmented" id="action-group" aria-label="阅读操作">
+                  <button class="segment audio-trigger" id="audio-button" type="button" aria-label="播放当前发音">
+                    <span class="audio-button-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path
+                          d="M3 9h4l5-4v14l-5-4H3zM16 9.5a4.5 4.5 0 0 1 0 5M18.5 7a8 8 0 0 1 0 10"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.8"
+                        />
+                      </svg>
+                    </span>
+                    <span>播放发音</span>
+                  </button>
+                  <button class="segment" id="random-button" type="button">随机一张</button>
+                  <button class="segment" id="fullscreen-button" type="button">卡片全屏</button>
+                </div>
+                <p class="audio-status" id="audio-status" aria-live="polite" hidden></p>
+              </div>
+            </section>
+
+            <section class="tips">
+              <div class="tip-card">
+                <span class="tip-kbd">↑</span>
+                <p>上一张</p>
+              </div>
+              <div class="tip-card">
+                <span class="tip-kbd">↓</span>
+                <p>下一张</p>
+              </div>
+              <div class="tip-card">
+                <span class="tip-kbd">点击</span>
+                <p>切换卡片</p>
+              </div>
+              <div class="tip-card">
+                <span class="tip-kbd">R</span>
+                <p>随机一张</p>
+              </div>
+              <div class="tip-card">
+                <span class="tip-kbd">F</span>
+                <p>切换全屏</p>
+              </div>
+              <div class="tip-card">
+                <span class="tip-kbd">Space</span>
+                <p>播放发音</p>
+              </div>
+            </section>
+          </div>
+
+          <div class="center-column">
+            <section class="stage">
+              <div class="card-frame">
+                <button
+                  class="nav-button nav-button-top"
+                  id="prev-button"
+                  type="button"
+                  aria-label="上一张"
+                >
+                  ↑ 上一张
+                </button>
+
+                <button class="flashcard" id="flashcard" type="button" aria-label="下一张卡片">
+                  <span class="card-category" id="card-category"></span>
+                  <span class="card-values">
+                    <span class="card-value" id="card-value"></span>
+                    <span class="card-subvalue" id="card-subvalue" hidden></span>
+                  </span>
+                  <span class="card-detail" id="card-detail" hidden></span>
+                  <span class="card-hint">👆 点击切换到下一张</span>
+                </button>
+
+                <button
+                  class="nav-button nav-button-bottom"
+                  id="next-button"
+                  type="button"
+                  aria-label="下一张"
+                >
+                  ↓ 下一张
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <aside class="list-panel">
+            <div class="list-header">
+              <div>
+                <p class="meta-label">完整列表</p>
+                <p class="meta-description" id="list-description"></p>
+              </div>
+            </div>
+            <div class="card-list" id="card-list" aria-label="完整列表"></div>
+          </aside>
+        </div>
+
+        <section class="reference-grid">
+          <article class="reference-card">
+            <p class="reference-eyebrow">Current Guide</p>
+            <h2>当前书写提示</h2>
+            <p class="reference-copy" id="writing-summary"></p>
+            <p class="reference-quote" id="writing-song"></p>
+          </article>
+
+          <article class="reference-card">
+            <p class="reference-eyebrow">Writing Rules</p>
+            <h2>四线三格规范</h2>
+            <p class="reference-copy" id="rule-rhyme"></p>
+            <ul class="reference-list" id="rule-list"></ul>
+          </article>
+
+          <article class="reference-card">
+            <p class="reference-eyebrow">Common Mixups</p>
+            <h2>易错字母</h2>
+            <div class="pair-list" id="error-pairs"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
