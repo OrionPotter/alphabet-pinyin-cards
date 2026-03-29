@@ -660,6 +660,16 @@ button {
   padding: 24px 32px;
 }
 
+.flashcard[data-deck="phonetic"] .card-values {
+  min-width: min(72vw, 820px);
+  min-height: min(76vh, 860px);
+  padding: 24px 32px;
+}
+
+.flashcard[data-deck="phonetic"][data-long="true"] .card-values {
+  min-width: min(82vw, 980px);
+}
+
 .flashcard[data-deck="english"][data-mode="combined"] .card-values {
   min-width: min(90vw, 1180px);
   min-height: min(62vh, 700px);

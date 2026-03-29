@@ -113,6 +113,72 @@ const pinyinFinalItems = [
   ...pinyinBackNasalFinalItems,
 ];
 
+const phoneticReference = {
+  rhyme:
+    "音标像地图，帮助孩子把声音和口型一一对应。先听音，再看口型和示例词，最后自己模仿读出来。",
+  rules: [
+    "先学单元音，再学双元音，最后学习辅音，顺序更稳定。",
+    "长音通常要拉长一点，短音保持轻快，不要拖尾。",
+    "清辅音发音轻，浊辅音发音时喉咙会有振动。",
+    "每次只盯住一个音，配合一个熟悉的示例词记忆更快。",
+    "看到音标时先不要急着拼字母，要先想它代表的声音。",
+  ],
+  errorPairs: ["iː-ɪ", "e-æ", "ʌ-ɑː", "ɔː-ɒ", "s-θ", "w-v", "n-ŋ"],
+};
+
+const phoneticMonophthongItems = [
+  { primary: "iː", detail: "see", tip: "嘴角向两侧展开，声音拉长。" },
+  { primary: "ɪ", detail: "ship", tip: "嘴型比 iː 更放松，声音更短。" },
+  { primary: "e", detail: "bed", tip: "嘴巴微开，舌位居中偏前。" },
+  { primary: "æ", detail: "cat", tip: "嘴巴张得更开，发音明亮。" },
+  { primary: "ʌ", detail: "cup", tip: "嘴巴自然张开，声音短促。" },
+  { primary: "ɑː", detail: "car", tip: "嘴巴张大，声音从口腔后部出来。" },
+  { primary: "ɒ", detail: "hot", tip: "嘴唇略圆，声音短。" },
+  { primary: "ɔː", detail: "door", tip: "嘴唇更圆，声音拉长。" },
+  { primary: "ʊ", detail: "book", tip: "嘴唇轻轻收圆，声音短。" },
+  { primary: "uː", detail: "blue", tip: "双唇收圆更明显，发音更长。" },
+  { primary: "ɜː", detail: "bird", tip: "舌头放平，声音平稳拉长。" },
+  { primary: "ə", detail: "about", tip: "弱读最常见，短而轻，不要重读。" },
+];
+
+const phoneticDiphthongItems = [
+  { primary: "eɪ", detail: "day", tip: "从 e 滑向 ɪ，结尾抬高。" },
+  { primary: "aɪ", detail: "my", tip: "开口后快速滑向 ɪ。" },
+  { primary: "ɔɪ", detail: "boy", tip: "先圆唇，再往前收。" },
+  { primary: "əʊ", detail: "go", tip: "先轻后圆，结尾更收口。" },
+  { primary: "aʊ", detail: "now", tip: "从大开口滑向圆唇。" },
+  { primary: "ɪə", detail: "ear", tip: "从短 ɪ 滑向弱读 ə。" },
+  { primary: "eə", detail: "hair", tip: "从 e 滑向 ə，口型逐渐放松。" },
+  { primary: "ʊə", detail: "tour", tip: "双唇先圆，再慢慢放松。" },
+];
+
+const phoneticConsonantItems = [
+  { primary: "p", detail: "pen", tip: "双唇闭合后送气。" },
+  { primary: "b", detail: "bag", tip: "和 p 口型接近，但喉咙会振动。" },
+  { primary: "t", detail: "ten", tip: "舌尖碰上齿龈，轻送气。" },
+  { primary: "d", detail: "dog", tip: "和 t 位置接近，但带振动。" },
+  { primary: "k", detail: "cat", tip: "舌后部抬起，再突然放开。" },
+  { primary: "g", detail: "go", tip: "和 k 相似，但喉咙振动。" },
+  { primary: "f", detail: "fish", tip: "上齿轻触下唇，气流摩擦出去。" },
+  { primary: "v", detail: "van", tip: "口型像 f，但要带振动。" },
+  { primary: "θ", detail: "thin", tip: "舌尖轻碰牙齿，轻轻送气。" },
+  { primary: "ð", detail: "this", tip: "口型像 θ，但喉咙振动。" },
+  { primary: "s", detail: "sun", tip: "舌尖靠近齿龈，送出细气流。" },
+  { primary: "z", detail: "zoo", tip: "和 s 接近，但有振动。" },
+  { primary: "ʃ", detail: "ship", tip: "嘴唇略突出，气流更宽。" },
+  { primary: "ʒ", detail: "vision", tip: "和 ʃ 接近，但要振动。" },
+  { primary: "h", detail: "hat", tip: "张口送气，不要挤压喉咙。" },
+  { primary: "m", detail: "map", tip: "双唇闭合，鼻腔出气。" },
+  { primary: "n", detail: "nose", tip: "舌尖抵上齿龈，鼻腔出气。" },
+  { primary: "ŋ", detail: "sing", tip: "舌后部抬起，气流从鼻腔出去。" },
+  { primary: "l", detail: "leg", tip: "舌尖抵上齿龈，两侧放气。" },
+  { primary: "r", detail: "red", tip: "舌尖不要卷得太紧，嘴唇微圆。" },
+  { primary: "j", detail: "yes", tip: "从 i 的口型快速滑向元音。" },
+  { primary: "w", detail: "wet", tip: "双唇先收圆，再快速张开。" },
+  { primary: "tʃ", detail: "chair", tip: "先短暂停住，再摩擦送气。" },
+  { primary: "dʒ", detail: "jump", tip: "口型像 tʃ，但带振动。" },
+];
+
 function getCombinedSong(text) {
   return [...text]
     .map((char) => (writingSongs[char] ? `${char}：${writingSongs[char]}` : ""))
@@ -197,6 +263,30 @@ const deckRegistry = {
       },
     },
   },
+  phonetic: {
+    label: "英语音标",
+    description: "补充常见英语 IPA 音标，支持单元音、双元音和辅音练习。",
+    modes: {
+      monophthongs: {
+        label: "单元音",
+        cardLabel: "英语音标 · 单元音",
+        description: "12 个常见单元音，先建立基础口型和长短音感知。",
+        items: phoneticMonophthongItems,
+      },
+      diphthongs: {
+        label: "双元音",
+        cardLabel: "英语音标 · 双元音",
+        description: "8 个常见双元音，重点感受口型滑动。",
+        items: phoneticDiphthongItems,
+      },
+      consonants: {
+        label: "辅音",
+        cardLabel: "英语音标 · 辅音",
+        description: "24 个常见辅音，配合示例词区分清浊和送气。",
+        items: phoneticConsonantItems,
+      },
+    },
+  },
 };
 
 const fontOptions = {
@@ -222,13 +312,13 @@ const fontOptions = {
   },
   andika: {
     label: "Andika",
-    decks: ["english"],
+    decks: ["english", "phonetic"],
     bodyFont: '"Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif',
     cardFont: '"Andika Basic", "Trebuchet MS", "Century Gothic", "Tw Cen MT", "Gill Sans MT", sans-serif',
   },
   print: {
     label: "印刷体",
-    decks: ["english"],
+    decks: ["english", "phonetic"],
     bodyFont: '"Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif',
     cardFont:
       '"Trebuchet MS", "Century Gothic", "Tw Cen MT", "Gill Sans MT", "Avenir Next", sans-serif',
@@ -238,6 +328,12 @@ const fontOptions = {
     decks: ["english"],
     bodyFont: '"Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif',
     cardFont: '"Pinyin WenKai", "Kaiti SC", "STKaiti", "KaiTi", "Trebuchet MS", serif',
+  },
+  phoneticSerif: {
+    label: "IPA Serif",
+    decks: ["phonetic"],
+    bodyFont: '"Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif',
+    cardFont: '"Times New Roman", "Georgia", "Noto Serif", serif',
   },
 };
 
@@ -313,8 +409,10 @@ const randomButton = document.querySelector("#random-button");
 const fullscreenButton = document.querySelector("#fullscreen-button");
 const englishAudioBaseUrl = "./audio/english/";
 const pinyinAudioBaseUrl = "./audio/pinyin/";
+const speechSynthesisApi = window.speechSynthesis ?? null;
 const audioCache = new Map();
 let activeAudio = null;
+let activeUtterance = null;
 let audioStatusTimer = 0;
 let audioPlayRequestId = 0;
 
@@ -465,6 +563,19 @@ function getPinyinLayout(text) {
   });
 }
 
+function getPhoneticLayout(text) {
+  const length = [...text].length;
+  const baseWidth = [0, 30, 42, 58, 72][Math.min(length, 4)] ?? 76;
+  const size = [0, 11.6, 10.2, 8.6, 7.2][Math.min(length, 4)] ?? 6.8;
+
+  return buildGlyphLayout({
+    width: baseWidth,
+    size,
+    spacing: "0.02em",
+    height: guideLineSets.english.line4 - guideLineSets.english.line1,
+  });
+}
+
 function getEnglishUppercaseLayout(isCombined) {
   const slot = isCombined ? englishSlots.combined.uppercase : englishSlots.single.uppercase;
   return buildGlyphLayout({
@@ -514,6 +625,11 @@ function applyCardLayout(item) {
     return;
   }
 
+  if (state.activeDeck === "phonetic") {
+    applyGlyphLayout(cardValue, getPhoneticLayout(item.primary));
+    return;
+  }
+
   if (state.activeMode === "combined") {
     applyGlyphLayout(cardValue, getEnglishUppercaseLayout(true));
     applyGlyphLayout(cardSubvalue, getEnglishLowercaseLayout(item.secondary, true));
@@ -559,12 +675,35 @@ function normalizeAudioKey(text) {
   return text.toLowerCase().replace(/ü/g, "v");
 }
 
+function supportsSpeechSynthesis() {
+  return Boolean(speechSynthesisApi && typeof SpeechSynthesisUtterance !== "undefined");
+}
+
+function getPreferredSpeechVoice() {
+  if (!supportsSpeechSynthesis()) {
+    return null;
+  }
+
+  const voices = speechSynthesisApi.getVoices();
+  if (!voices.length) {
+    return null;
+  }
+
+  return (
+    voices.find((voice) => voice.lang === "en-US") ??
+    voices.find((voice) => voice.lang === "en-GB") ??
+    voices.find((voice) => voice.lang?.startsWith("en-")) ??
+    null
+  );
+}
+
 function getCurrentAudioConfig() {
   const item = getCurrentItems()[getCurrentIndex()];
 
   if (state.activeDeck === "english") {
     const letterKey = getEnglishLetterKey(item);
     return {
+      type: "file",
       cacheKey: `english:${letterKey}`,
       key: letterKey,
       label: item.secondary ?? item.primary,
@@ -575,10 +714,20 @@ function getCurrentAudioConfig() {
   if (state.activeDeck === "pinyin") {
     const pinyinKey = normalizeAudioKey(item.audio ?? item.primary);
     return {
+      type: "file",
       cacheKey: `pinyin:${pinyinKey}`,
       key: pinyinKey,
       label: item.primary,
       src: `${pinyinAudioBaseUrl}${pinyinKey}.mp3`,
+    };
+  }
+
+  if (state.activeDeck === "phonetic") {
+    return {
+      type: "speech",
+      key: item.primary,
+      label: item.primary,
+      text: item.detail ?? item.primary,
     };
   }
 
@@ -614,6 +763,11 @@ function resetAudioButtonState() {
 function stopCurrentAudio() {
   audioPlayRequestId += 1;
 
+  if (speechSynthesisApi) {
+    speechSynthesisApi.cancel();
+  }
+  activeUtterance = null;
+
   if (!activeAudio) {
     resetAudioButtonState();
     return;
@@ -627,7 +781,7 @@ function stopCurrentAudio() {
 
 function renderAudioButton() {
   const audioConfig = getCurrentAudioConfig();
-  const isPlayable = Boolean(audioConfig?.key);
+  const isPlayable = Boolean(audioConfig?.key) && (audioConfig.type !== "speech" || supportsSpeechSynthesis());
 
   audioButton.disabled = !isPlayable;
   audioButton.title = isPlayable ? `播放 ${audioConfig.label} 的读音` : "当前卡片没有可播放的发音";
@@ -637,8 +791,45 @@ function renderAudioButton() {
 
 function playCurrentAudio() {
   const audioConfig = getCurrentAudioConfig();
-  if (!audioConfig?.key) {
+  if (!audioConfig?.key || (audioConfig.type === "speech" && !supportsSpeechSynthesis())) {
     showAudioStatus("当前卡片没有可播放的发音。", "error");
+    return;
+  }
+
+  if (audioConfig.type === "speech") {
+    stopCurrentAudio();
+
+    const utterance = new SpeechSynthesisUtterance(audioConfig.text);
+    const voice = getPreferredSpeechVoice();
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = "en-US";
+    }
+    utterance.rate = 0.72;
+    utterance.pitch = 1;
+    activeUtterance = utterance;
+    audioButton.classList.add("is-playing");
+    showAudioStatus("");
+
+    utterance.addEventListener("end", () => {
+      if (activeUtterance === utterance) {
+        activeUtterance = null;
+        resetAudioButtonState();
+      }
+    });
+
+    utterance.addEventListener("error", () => {
+      if (activeUtterance === utterance) {
+        activeUtterance = null;
+        resetAudioButtonState();
+        showAudioStatus("播放失败，请重试。", "error");
+      }
+    });
+
+    speechSynthesisApi.cancel();
+    speechSynthesisApi.speak(utterance);
     return;
   }
 
@@ -881,6 +1072,27 @@ function renderReference() {
     });
     errorPairs.innerHTML = "";
     pinyinReference.errorPairs.forEach((pair) => {
+      const chip = document.createElement("span");
+      chip.className = "pair-chip";
+      chip.textContent = pair;
+      errorPairs.append(chip);
+    });
+    return;
+  }
+
+  if (state.activeDeck === "phonetic") {
+    referenceGrid.hidden = false;
+    writingSummary.textContent = `${mode.label} · ${item.primary} · 示例词：${item.detail}`;
+    writingSong.textContent = item.tip ?? `建议先听 ${item.detail}，再模仿 ${item.primary} 的口型和发音。`;
+    ruleRhyme.textContent = phoneticReference.rhyme;
+    ruleList.innerHTML = "";
+    phoneticReference.rules.forEach((rule) => {
+      const li = document.createElement("li");
+      li.textContent = rule;
+      ruleList.append(li);
+    });
+    errorPairs.innerHTML = "";
+    phoneticReference.errorPairs.forEach((pair) => {
       const chip = document.createElement("span");
       chip.className = "pair-chip";
       chip.textContent = pair;
