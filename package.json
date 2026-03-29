@@ -5,8 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "python -m http.server 8000 || php -S localhost:8000 || npx serve",
-    "deploy": "wrangler pages deploy . --project-name=alphabet-pinyin-cards",
-    "deploy:prod": "wrangler pages deploy . --project-name=alphabet-pinyin-cards --branch=main"
+    "deploy": "npx wrangler pages deploy . --project-name=alphabet-pinyin-cards"
   },
   "keywords": [
     "education",

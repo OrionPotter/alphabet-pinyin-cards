@@ -53,40 +53,26 @@ php -S localhost:8000
 
 ## ☁️ 部署到 Cloudflare Pages
 
-### 方法一：Git 自动部署（推荐）
+### 方法一：Git 自动部署（推荐，最简单）
 
-#### 使用 Cloudflare Pages Dashboard
-
-1. 推送代码到 GitHub：
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/你的用户名/alphabet-pinyin-cards.git
-git push -u origin main
-```
+1. 推送代码到 GitHub（如果还没推送）
 
 2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
 
 3. 进入 **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
 
-4. 选择你的仓库并配置：
-   - **项目名称**：alphabet-pinyin-cards
+4. 选择你的 GitHub 仓库并配置：
+   - **项目名称**：alphabet-pinyin-cards（或自定义）
    - **生产分支**：main
+   - **框架预设**：None
    - **构建命令**：留空
-   - **构建输出目录**：/
+   - **构建输出目录**：/（根目录）
 
-5. 点击 **Save and Deploy**，等待部署完成！
+5. 点击 **Save and Deploy**
 
-#### 使用 GitHub Actions（自动化）
+6. 等待部署完成（1-3分钟），你的网站将在 `https://你的项目名.pages.dev` 上线！
 
-项目已包含 GitHub Actions 配置！
-
-1. 在 GitHub 仓库设置中添加 Secrets：
-   - `CLOUDFLARE_API_TOKEN`：从 [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens) 获取
-   - `CLOUDFLARE_ACCOUNT_ID`：从 Cloudflare Dashboard 获取
-
-2. 推送代码后，GitHub Actions 会自动部署！
+之后每次推送代码到 GitHub，Cloudflare 会自动重新部署。
 
 ### 方法二：Wrangler CLI 部署
 
@@ -97,8 +83,8 @@ npm install
 # 登录 Cloudflare
 npx wrangler login
 
-# 部署
-npm run deploy
+# 部署（使用 Pages 命令）
+npx wrangler pages deploy . --project-name=alphabet-pinyin-cards
 
 # 或使用脚本
 # Windows: deploy.bat
@@ -129,10 +115,9 @@ npm run deploy
 │   └── pinyin-wenkai-light.*
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml # GitHub Actions 配置
+│       └── deploy.yml # GitHub Actions 配置（可选）
 ├── _headers           # Cloudflare 缓存配置
 ├── _redirects         # 路由重定向规则
-├── wrangler.toml      # Wrangler 配置
 ├── package.json       # NPM 配置
 ├── deploy.sh          # Linux/Mac 部署脚本
 ├── deploy.bat         # Windows 部署脚本
