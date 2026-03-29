@@ -4,8 +4,7 @@
   "description": "一个专为儿童设计的互动式字母和拼音学习网站",
   "main": "index.html",
   "scripts": {
-    "dev": "python -m http.server 8000 || php -S localhost:8000 || npx serve",
-    "deploy": "npx wrangler pages deploy . --project-name=alphabet-pinyin-cards"
+    "dev": "python -m http.server 8000 || php -S localhost:8000 || npx serve"
   },
   "keywords": [
     "education",
@@ -17,8 +16,5 @@
     "english"
   ],
   "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "wrangler": "^4.78.0"
-  }
+  "license": "MIT"
 }
