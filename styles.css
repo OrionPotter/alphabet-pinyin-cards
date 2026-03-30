@@ -341,6 +341,10 @@ button {
   color: #b3481d;
 }
 
+.audio-status[data-tone="success"] {
+  color: #2f7d32;
+}
+
 .stage {
   padding: 32px;
   border-radius: 32px;
@@ -395,6 +399,7 @@ button {
 }
 
 .path-button {
+  position: relative;
   display: grid;
   gap: 4px;
   justify-items: start;
@@ -409,6 +414,18 @@ button {
     border-color 160ms ease,
     box-shadow 160ms ease,
     background 160ms ease;
+  overflow: hidden;
+}
+
+.path-button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  width: var(--path-progress, 0%);
+  background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+  border-radius: 999px;
 }
 
 .path-button:hover,
@@ -453,6 +470,7 @@ button {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(29, 43, 54, 0.08);
+  min-height: 88px;
 }
 
 .progress-value {
@@ -894,6 +912,8 @@ button {
 
 .practice-panel {
   gap: 18px;
+  border: 1px solid rgba(255, 107, 107, 0.16);
+  background: linear-gradient(180deg, rgba(255, 250, 241, 0.96), rgba(255, 255, 255, 0.82));
 }
 
 .practice-head {
@@ -906,6 +926,14 @@ button {
 .practice-audio-button,
 .practice-next-button {
   min-width: 132px;
+}
+
+.practice-next-button {
+  justify-self: start;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+  color: #fffdf8;
+  border-color: transparent;
+  box-shadow: 0 10px 18px rgba(255, 107, 107, 0.24);
 }
 
 .practice-options {
@@ -928,7 +956,8 @@ button {
     transform 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease,
-    background 160ms ease;
+    background 160ms ease,
+    opacity 160ms ease;
 }
 
 .practice-option:hover,
@@ -941,11 +970,20 @@ button {
 .practice-option.is-correct {
   background: rgba(119, 221, 119, 0.22);
   border-color: rgba(73, 168, 73, 0.55);
+  box-shadow: 0 12px 20px rgba(73, 168, 73, 0.16);
 }
 
 .practice-option.is-wrong {
   background: rgba(255, 107, 107, 0.15);
   border-color: rgba(238, 90, 82, 0.5);
+}
+
+.practice-option:disabled {
+  cursor: default;
+}
+
+.practice-options:has(.practice-option.is-correct) .practice-option:not(.is-correct):not(.is-wrong) {
+  opacity: 0.56;
 }
 
 .practice-option-label {

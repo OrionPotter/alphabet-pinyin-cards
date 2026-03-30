@@ -380,6 +380,7 @@ const state = {
   indices: {},
   progress: null,
   quiz: null,
+  quizStreak: 0,
   hasSessionRecorded: false,
   lastTrackedCardKey: "",
 };
@@ -459,6 +460,7 @@ const practiceOptions = document.querySelector("#practice-options");
 const practiceFeedback = document.querySelector("#practice-feedback");
 const practiceAudioButton = document.querySelector("#practice-audio-button");
 const practiceNextButton = document.querySelector("#practice-next-button");
+const fontControlGroup = fontGroup.closest(".control-group");
 const englishAudioBaseUrl = "./audio/english/";
 const pinyinAudioBaseUrl = "./audio/pinyin/";
 const phoneticAudioBaseUrl = "./audio/phonetic/";
@@ -552,10 +554,18 @@ function ensureProgressBucket(deckId = state.activeDeck, modeId = state.activeMo
       seen: {},
       correct: 0,
       wrong: 0,
+      bestStreak: 0,
       lastIndex: 0,
       lastVisitedAt: 0,
     };
   }
+
+  state.progress.paths[key].seen ??= {};
+  state.progress.paths[key].correct ??= 0;
+  state.progress.paths[key].wrong ??= 0;
+  state.progress.paths[key].bestStreak ??= 0;
+  state.progress.paths[key].lastIndex ??= 0;
+  state.progress.paths[key].lastVisitedAt ??= 0;
 
   return state.progress.paths[key];
 }
@@ -632,8 +642,11 @@ function recordQuizResult(isCorrect, index) {
 
   if (isCorrect) {
     bucket.correct += 1;
+    state.quizStreak += 1;
+    bucket.bestStreak = Math.max(bucket.bestStreak, state.quizStreak);
   } else {
     bucket.wrong += 1;
+    state.quizStreak = 0;
   }
 
   persistLastState();
@@ -642,11 +655,19 @@ function recordQuizResult(isCorrect, index) {
 function getProgressSummary(deckId = state.activeDeck, modeId = state.activeMode) {
   const bucket = ensureProgressBucket(deckId, modeId);
   const seenCount = Object.keys(bucket.seen).length;
+  const total = deckRegistry[deckId].modes[modeId].items.length;
+  const attempts = bucket.correct + bucket.wrong;
+  const completion = total ? Math.round((seenCount / total) * 100) : 0;
+  const accuracy = attempts ? Math.round((bucket.correct / attempts) * 100) : 0;
 
   return {
     seenCount,
+    total,
+    completion,
+    accuracy,
     correct: bucket.correct,
     wrong: bucket.wrong,
+    bestStreak: bucket.bestStreak,
     lastIndex: bucket.lastIndex,
     sessionCount: state.progress.sessionCount,
   };
@@ -1197,6 +1218,7 @@ function setActiveView(viewId) {
   stopCurrentAudio();
   showAudioStatus("");
   state.activeView = viewId;
+  state.quizStreak = 0;
 
   if (viewId === "quiz") {
     startQuizRound();
@@ -1273,6 +1295,7 @@ function renderPathButtons() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `path-button${step.mode === state.activeMode ? " is-active" : ""}`;
+    button.style.setProperty("--path-progress", `${summary.completion}%`);
     button.addEventListener("click", () => {
       selectLearningPath(step.mode);
     });
@@ -1287,7 +1310,7 @@ function renderPathButtons() {
 
     const meta = document.createElement("span");
     meta.className = "path-meta";
-    meta.textContent = `已学 ${summary.seenCount} 张`;
+    meta.textContent = `完成 ${summary.completion}% · 已学 ${summary.seenCount}/${summary.total}`;
 
     button.append(title, copy, meta);
     pathList.append(button);
@@ -1321,10 +1344,12 @@ function renderProgress() {
     resumeButton.textContent = "继续上次学习";
   }
 
+  const nextCardIndex = Math.min(summary.lastIndex + 1, summary.total || 1);
   const cards = [
-    { value: summary.seenCount, label: "当前已学卡片" },
-    { value: summary.correct, label: "当前答对题数" },
-    { value: summary.wrong, label: "当前答错题数" },
+    { value: `${summary.completion}%`, label: "当前路径完成度" },
+    { value: `${summary.accuracy}%`, label: "练习正确率" },
+    { value: summary.bestStreak, label: "最高连对题数" },
+    { value: `${nextCardIndex}/${summary.total}`, label: "上次学习位置" },
     { value: summary.sessionCount, label: "累计学习次数" },
   ];
 
@@ -1354,12 +1379,18 @@ function renderPracticePanel() {
   }
 
   const items = getCurrentItems();
+  const summary = getProgressSummary();
   practiceTitle.textContent = `${getCurrentModeSet().label}练习`;
-  practiceCopy.textContent = state.quiz.prompt;
+  if (state.quiz.answered) {
+    practiceCopy.textContent = `当前连对 ${state.quizStreak} 题，最高连对 ${summary.bestStreak} 题。`;
+  } else {
+    practiceCopy.textContent = `${state.quiz.prompt} 可以按 1-4 快速作答。`;
+  }
   practiceNextButton.hidden = !state.quiz.answered;
+  practiceNextButton.textContent = state.quiz.answered ? "继续下一题" : "下一题";
 
   practiceOptions.innerHTML = "";
-  state.quiz.optionIndices.forEach((optionIndex) => {
+  state.quiz.optionIndices.forEach((optionIndex, optionNumber) => {
     const item = items[optionIndex];
     const button = document.createElement("button");
     button.type = "button";
@@ -1376,7 +1407,7 @@ function renderPracticePanel() {
 
     const label = document.createElement("span");
     label.className = "practice-option-label";
-    label.textContent = item.primary;
+    label.textContent = `${optionNumber + 1}. ${item.primary}`;
 
     const copy = document.createElement("span");
     copy.className = "practice-option-copy";
@@ -1603,6 +1634,7 @@ function render() {
   prevButton.hidden = inQuiz;
   nextButton.hidden = inQuiz;
   randomButton.textContent = inQuiz ? "换一题" : "随机一张";
+  fontControlGroup.hidden = inQuiz;
   renderDeckTypeButtons();
   renderPathButtons();
   renderModeButtons();
