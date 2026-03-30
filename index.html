@@ -40,8 +40,19 @@
               </div>
 
               <div class="control-group">
+                <span class="control-label">学习路径</span>
+                <div class="path-list" id="path-list" aria-label="学习路径"></div>
+                <button class="segment" id="resume-button" type="button">继续上次学习</button>
+              </div>
+
+              <div class="control-group">
                 <span class="control-label">显示模式</span>
                 <div class="segmented" id="deck-mode-group" aria-label="显示模式"></div>
+              </div>
+
+              <div class="control-group">
+                <span class="control-label">学习方式</span>
+                <div class="segmented" id="view-group" aria-label="学习方式"></div>
               </div>
 
               <div class="control-group">
@@ -100,6 +111,13 @@
                 <p>播放发音</p>
               </div>
             </section>
+
+            <section class="panel progress-panel">
+              <div class="control-group">
+                <span class="control-label">本地进度</span>
+                <div class="progress-grid" id="progress-grid"></div>
+              </div>
+            </section>
           </div>
 
           <div class="center-column">
@@ -133,6 +151,23 @@
                   ↓ 下一张
                 </button>
               </div>
+            </section>
+
+            <section class="panel practice-panel" id="practice-panel" hidden>
+              <div class="practice-head">
+                <div>
+                  <p class="meta-label" id="practice-title"></p>
+                  <p class="meta-description" id="practice-copy"></p>
+                </div>
+                <button class="segment practice-audio-button" id="practice-audio-button" type="button">
+                  再听一次
+                </button>
+              </div>
+              <div class="practice-options" id="practice-options" aria-label="练习选项"></div>
+              <p class="audio-status practice-feedback" id="practice-feedback" aria-live="polite" hidden></p>
+              <button class="segment practice-next-button" id="practice-next-button" type="button" hidden>
+                下一题
+              </button>
             </section>
           </div>
 

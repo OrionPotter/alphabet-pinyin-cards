@@ -337,11 +337,51 @@ const fontOptions = {
   },
 };
 
+const learningPathRegistry = {
+  pinyin: [
+    { mode: "initials", label: "1. 声母", description: "先熟悉 23 个声母。" },
+    { mode: "simpleFinals", label: "2. 单韵母", description: "先把 a o e i u ü 记稳。" },
+    { mode: "compoundFinals", label: "3. 复韵母", description: "把 ai ei ui 这类组合读顺。" },
+    { mode: "frontNasalFinals", label: "4. 前鼻音", description: "重点区分 an en in un ün。" },
+    { mode: "backNasalFinals", label: "5. 后鼻音", description: "重点区分 ang eng ing ong。" },
+    { mode: "specialFinals", label: "6. 特殊韵母", description: "单独记住 er。" },
+    { mode: "finals", label: "7. 综合复习", description: "把韵母整体过一遍。" },
+  ],
+  english: [
+    { mode: "uppercase", label: "1. 大写字母", description: "先认大写字母形状。" },
+    { mode: "lowercase", label: "2. 小写字母", description: "再认小写字母形状。" },
+    { mode: "combined", label: "3. 大小写配对", description: "把大小写一一对应起来。" },
+  ],
+  phonetic: [
+    { mode: "monophthongs", label: "1. 单元音", description: "先建立基础口型。" },
+    { mode: "diphthongs", label: "2. 双元音", description: "再练口型滑动。" },
+    { mode: "consonants", label: "3. 辅音", description: "最后练清浊和送气。" },
+  ],
+};
+
+const learningViewOptions = {
+  browse: {
+    label: "卡片学习",
+    description: "自由翻卡和听音。",
+  },
+  quiz: {
+    label: "听音练习",
+    description: "听一听，再选对答案。",
+  },
+};
+
+const progressStorageKey = "pinyin-learning-progress-v1";
+
 const state = {
   activeDeck: "pinyin",
   activeMode: "initials",
   activeFont: "pinyinWenkai",
+  activeView: "browse",
   indices: {},
+  progress: null,
+  quiz: null,
+  hasSessionRecorded: false,
+  lastTrackedCardKey: "",
 };
 
 const guideLineSets = {
@@ -382,7 +422,10 @@ const englishSlots = {
 };
 
 const deckTypeGroup = document.querySelector("#deck-type-group");
+const pathList = document.querySelector("#path-list");
+const resumeButton = document.querySelector("#resume-button");
 const deckModeGroup = document.querySelector("#deck-mode-group");
+const viewGroup = document.querySelector("#view-group");
 const fontGroup = document.querySelector("#font-group");
 const audioButton = document.querySelector("#audio-button");
 const audioStatus = document.querySelector("#audio-status");
@@ -396,6 +439,7 @@ const cardValues = document.querySelector(".card-values");
 const cardValue = document.querySelector("#card-value");
 const cardSubvalue = document.querySelector("#card-subvalue");
 const cardDetail = document.querySelector("#card-detail");
+const cardHint = document.querySelector(".card-hint");
 const referenceGrid = document.querySelector(".reference-grid");
 const writingSummary = document.querySelector("#writing-summary");
 const writingSong = document.querySelector("#writing-song");
@@ -407,6 +451,14 @@ const prevButton = document.querySelector("#prev-button");
 const nextButton = document.querySelector("#next-button");
 const randomButton = document.querySelector("#random-button");
 const fullscreenButton = document.querySelector("#fullscreen-button");
+const progressGrid = document.querySelector("#progress-grid");
+const practicePanel = document.querySelector("#practice-panel");
+const practiceTitle = document.querySelector("#practice-title");
+const practiceCopy = document.querySelector("#practice-copy");
+const practiceOptions = document.querySelector("#practice-options");
+const practiceFeedback = document.querySelector("#practice-feedback");
+const practiceAudioButton = document.querySelector("#practice-audio-button");
+const practiceNextButton = document.querySelector("#practice-next-button");
 const englishAudioBaseUrl = "./audio/english/";
 const pinyinAudioBaseUrl = "./audio/pinyin/";
 const phoneticAudioBaseUrl = "./audio/phonetic/";
@@ -442,10 +494,162 @@ function applyStateFromQuery() {
   if (Number.isInteger(rawIndex)) {
     state.indices[buildDeckKey(state.activeDeck, state.activeMode)] = rawIndex;
   }
+
+  const viewId = params.get("view");
+  if (viewId && learningViewOptions[viewId]) {
+    state.activeView = viewId;
+  }
 }
 
 function buildDeckKey(deckId, modeId) {
   return `${deckId}:${modeId}`;
+}
+
+function createDefaultProgress() {
+  return {
+    version: 1,
+    sessionCount: 0,
+    lastState: null,
+    paths: {},
+  };
+}
+
+function loadProgress() {
+  try {
+    const raw = window.localStorage.getItem(progressStorageKey);
+    if (!raw) {
+      state.progress = createDefaultProgress();
+      return;
+    }
+
+    const parsed = JSON.parse(raw);
+    state.progress = {
+      ...createDefaultProgress(),
+      ...parsed,
+      paths: parsed?.paths ?? {},
+    };
+  } catch {
+    state.progress = createDefaultProgress();
+  }
+}
+
+function saveProgress() {
+  if (!state.progress) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(progressStorageKey, JSON.stringify(state.progress));
+  } catch {
+    return;
+  }
+}
+
+function ensureProgressBucket(deckId = state.activeDeck, modeId = state.activeMode) {
+  const key = buildDeckKey(deckId, modeId);
+  if (!state.progress.paths[key]) {
+    state.progress.paths[key] = {
+      seen: {},
+      correct: 0,
+      wrong: 0,
+      lastIndex: 0,
+      lastVisitedAt: 0,
+    };
+  }
+
+  return state.progress.paths[key];
+}
+
+function recordSessionIfNeeded() {
+  if (state.hasSessionRecorded) {
+    return;
+  }
+
+  state.progress.sessionCount += 1;
+  state.hasSessionRecorded = true;
+  saveProgress();
+}
+
+function persistLastState() {
+  state.progress.lastState = {
+    deck: state.activeDeck,
+    mode: state.activeMode,
+    font: state.activeFont,
+    view: state.activeView,
+    index: getCurrentIndex(),
+  };
+  saveProgress();
+}
+
+function restoreProgressState() {
+  const savedState = state.progress?.lastState;
+  if (!savedState) {
+    return;
+  }
+
+  if (deckRegistry[savedState.deck]) {
+    state.activeDeck = savedState.deck;
+  }
+
+  const deck = deckRegistry[state.activeDeck];
+  if (deck?.modes[savedState.mode]) {
+    state.activeMode = savedState.mode;
+  }
+
+  const availableFonts = getAvailableFontEntries(state.activeDeck).map(([fontId]) => fontId);
+  if (savedState.font && availableFonts.includes(savedState.font)) {
+    state.activeFont = savedState.font;
+  }
+
+  if (savedState.view && learningViewOptions[savedState.view]) {
+    state.activeView = savedState.view;
+  }
+
+  if (Number.isInteger(savedState.index)) {
+    state.indices[buildDeckKey(state.activeDeck, state.activeMode)] = savedState.index;
+  }
+}
+
+function recordCurrentCardView(force = false) {
+  const key = `${buildDeckKey(state.activeDeck, state.activeMode)}:${getCurrentIndex()}`;
+  if (!force && state.lastTrackedCardKey === key) {
+    persistLastState();
+    return;
+  }
+
+  state.lastTrackedCardKey = key;
+  const bucket = ensureProgressBucket();
+  bucket.seen[getCurrentIndex()] = 1;
+  bucket.lastIndex = getCurrentIndex();
+  bucket.lastVisitedAt = Date.now();
+  persistLastState();
+}
+
+function recordQuizResult(isCorrect, index) {
+  const bucket = ensureProgressBucket();
+  bucket.lastIndex = index;
+  bucket.lastVisitedAt = Date.now();
+
+  if (isCorrect) {
+    bucket.correct += 1;
+  } else {
+    bucket.wrong += 1;
+  }
+
+  persistLastState();
+}
+
+function getProgressSummary(deckId = state.activeDeck, modeId = state.activeMode) {
+  const bucket = ensureProgressBucket(deckId, modeId);
+  const seenCount = Object.keys(bucket.seen).length;
+
+  return {
+    seenCount,
+    correct: bucket.correct,
+    wrong: bucket.wrong,
+    lastIndex: bucket.lastIndex,
+    sessionCount: state.progress.sessionCount,
+  };
 }
 
 function syncStateToQuery() {
@@ -454,6 +658,7 @@ function syncStateToQuery() {
   params.set("mode", state.activeMode);
   params.set("font", state.activeFont);
   params.set("index", String(getCurrentIndex()));
+  params.set("view", state.activeView);
 
   const nextQuery = params.toString();
   const nextUrl = nextQuery ? `${window.location.pathname}?${nextQuery}${window.location.hash}` : window.location.pathname;
@@ -707,10 +912,12 @@ function normalizePhoneticAudioKey(text) {
   return map[text] ?? text.toLowerCase();
 }
 
-function getCurrentAudioConfig() {
-  const item = getCurrentItems()[getCurrentIndex()];
+function getAudioConfigForItem(item, deckId = state.activeDeck) {
+  if (!item) {
+    return null;
+  }
 
-  if (state.activeDeck === "english") {
+  if (deckId === "english") {
     const letterKey = getEnglishLetterKey(item);
     return {
       type: "file",
@@ -721,7 +928,7 @@ function getCurrentAudioConfig() {
     };
   }
 
-  if (state.activeDeck === "pinyin") {
+  if (deckId === "pinyin") {
     const pinyinKey = normalizeAudioKey(item.audio ?? item.primary);
     return {
       type: "file",
@@ -732,7 +939,7 @@ function getCurrentAudioConfig() {
     };
   }
 
-  if (state.activeDeck === "phonetic") {
+  if (deckId === "phonetic") {
     const phoneticKey = normalizePhoneticAudioKey(item.audio ?? item.primary);
     return {
       type: "file",
@@ -744,6 +951,10 @@ function getCurrentAudioConfig() {
   }
 
   return null;
+}
+
+function getCurrentAudioConfig() {
+  return getAudioConfigForItem(getCurrentItems()[getCurrentIndex()]);
 }
 
 function getCachedAudio(audioConfig) {
@@ -834,6 +1045,44 @@ function playCurrentAudio() {
   });
 }
 
+function playAudioFromConfig(audioConfig, feedbackTarget = audioStatus) {
+  if (!audioConfig?.key) {
+    feedbackTarget.hidden = false;
+    feedbackTarget.textContent = "当前题目没有可播放的发音。";
+    feedbackTarget.dataset.tone = "error";
+    return;
+  }
+
+  const audio = getCachedAudio(audioConfig);
+  if (activeAudio && activeAudio !== audio) {
+    stopCurrentAudio();
+  }
+
+  activeAudio = audio;
+  const playRequestId = ++audioPlayRequestId;
+  audio.currentTime = 0;
+
+  const playPromise = audio.play();
+  if (!playPromise?.catch) {
+    return;
+  }
+
+  playPromise.catch((error) => {
+    const isStaleRequest = playRequestId !== audioPlayRequestId;
+    if (isStaleRequest || error?.name === "AbortError") {
+      return;
+    }
+
+    if (activeAudio === audio) {
+      activeAudio = null;
+    }
+
+    feedbackTarget.hidden = false;
+    feedbackTarget.textContent = "播放失败，请重试。";
+    feedbackTarget.dataset.tone = "error";
+  });
+}
+
 function selectDeck(deckId) {
   const deck = deckRegistry[deckId];
   stopCurrentAudio();
@@ -847,6 +1096,13 @@ function selectDeck(deckId) {
   const availableFonts = getAvailableFontEntries(deckId).map(([fontId]) => fontId);
   if (!availableFonts.includes(state.activeFont)) {
     [state.activeFont] = availableFonts;
+  }
+
+  state.quiz = null;
+  recordCurrentCardView(true);
+
+  if (state.activeView === "quiz") {
+    startQuizRound();
   }
 
   render();
@@ -871,6 +1127,13 @@ function selectMode(modeId) {
     }
   }
 
+  state.quiz = null;
+  recordCurrentCardView(true);
+
+  if (state.activeView === "quiz") {
+    startQuizRound();
+  }
+
   render();
 }
 
@@ -878,6 +1141,7 @@ function selectFont(fontId) {
   state.activeFont = fontId;
   showAudioStatus("");
   renderFonts();
+  persistLastState();
   syncStateToQuery();
 }
 
@@ -885,10 +1149,13 @@ function selectCard(index) {
   stopCurrentAudio();
   showAudioStatus("");
   setCurrentIndex(index);
+  state.quiz = null;
+  recordCurrentCardView(true);
   renderCard();
   renderCardList();
   renderReference();
   renderAudioButton();
+  renderProgress();
   syncStateToQuery();
 }
 
@@ -902,6 +1169,222 @@ function formatListItem(item) {
   }
 
   return item.primary;
+}
+
+function getPathSteps(deckId = state.activeDeck) {
+  return learningPathRegistry[deckId] ?? [];
+}
+
+function selectLearningPath(modeId) {
+  stopCurrentAudio();
+  showAudioStatus("");
+  state.activeMode = modeId;
+  setCurrentIndex(0);
+  recordCurrentCardView(true);
+
+  if (state.activeView === "quiz") {
+    startQuizRound();
+  }
+
+  render();
+}
+
+function setActiveView(viewId) {
+  if (!learningViewOptions[viewId]) {
+    return;
+  }
+
+  stopCurrentAudio();
+  showAudioStatus("");
+  state.activeView = viewId;
+
+  if (viewId === "quiz") {
+    startQuizRound();
+  } else {
+    state.quiz = null;
+  }
+
+  render();
+}
+
+function buildQuizQuestion() {
+  const items = getCurrentItems();
+  if (!items.length) {
+    return null;
+  }
+
+  const optionCount = Math.min(4, items.length);
+  const correctIndex = Math.floor(Math.random() * items.length);
+  const optionSet = new Set([correctIndex]);
+
+  while (optionSet.size < optionCount) {
+    optionSet.add(Math.floor(Math.random() * items.length));
+  }
+
+  const optionIndices = [...optionSet].sort(() => Math.random() - 0.5);
+
+  return {
+    correctIndex,
+    optionIndices,
+    selectedIndex: null,
+    answered: false,
+    prompt: "听一听，选出正确答案。",
+  };
+}
+
+function startQuizRound() {
+  state.quiz = buildQuizQuestion();
+  if (!state.quiz) {
+    return;
+  }
+
+  setCurrentIndex(state.quiz.correctIndex);
+  practiceFeedback.hidden = true;
+  practiceFeedback.textContent = "";
+  delete practiceFeedback.dataset.tone;
+}
+
+function submitQuizAnswer(index) {
+  if (!state.quiz || state.quiz.answered) {
+    return;
+  }
+
+  const isCorrect = index === state.quiz.correctIndex;
+  state.quiz.selectedIndex = index;
+  state.quiz.answered = true;
+  recordQuizResult(isCorrect, state.quiz.correctIndex);
+
+  practiceFeedback.hidden = false;
+  practiceFeedback.dataset.tone = isCorrect ? "success" : "error";
+  practiceFeedback.textContent = isCorrect
+    ? "答对了，继续下一题。"
+    : `这次选错了，正确答案是 ${formatListItem(getCurrentItems()[state.quiz.correctIndex])}。`;
+
+  renderCard();
+  renderPracticePanel();
+  renderProgress();
+}
+
+function renderPathButtons() {
+  pathList.innerHTML = "";
+
+  getPathSteps().forEach((step) => {
+    const summary = getProgressSummary(state.activeDeck, step.mode);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `path-button${step.mode === state.activeMode ? " is-active" : ""}`;
+    button.addEventListener("click", () => {
+      selectLearningPath(step.mode);
+    });
+
+    const title = document.createElement("span");
+    title.className = "path-title";
+    title.textContent = step.label;
+
+    const copy = document.createElement("span");
+    copy.className = "path-copy";
+    copy.textContent = step.description;
+
+    const meta = document.createElement("span");
+    meta.className = "path-meta";
+    meta.textContent = `已学 ${summary.seenCount} 张`;
+
+    button.append(title, copy, meta);
+    pathList.append(button);
+  });
+}
+
+function renderViewButtons() {
+  viewGroup.innerHTML = "";
+
+  Object.entries(learningViewOptions).forEach(([viewId, view]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `segment${viewId === state.activeView ? " is-active" : ""}`;
+    button.textContent = view.label;
+    button.title = view.description;
+    button.addEventListener("click", () => {
+      setActiveView(viewId);
+    });
+    viewGroup.append(button);
+  });
+}
+
+function renderProgress() {
+  const summary = getProgressSummary();
+  const savedState = state.progress.lastState;
+  if (savedState && deckRegistry[savedState.deck]?.modes[savedState.mode]) {
+    resumeButton.disabled = false;
+    resumeButton.textContent = `继续上次：${deckRegistry[savedState.deck].label} / ${deckRegistry[savedState.deck].modes[savedState.mode].label}`;
+  } else {
+    resumeButton.disabled = true;
+    resumeButton.textContent = "继续上次学习";
+  }
+
+  const cards = [
+    { value: summary.seenCount, label: "当前已学卡片" },
+    { value: summary.correct, label: "当前答对题数" },
+    { value: summary.wrong, label: "当前答错题数" },
+    { value: summary.sessionCount, label: "累计学习次数" },
+  ];
+
+  progressGrid.innerHTML = "";
+  cards.forEach((item) => {
+    const card = document.createElement("div");
+    card.className = "progress-card";
+
+    const value = document.createElement("p");
+    value.className = "progress-value";
+    value.textContent = String(item.value);
+
+    const label = document.createElement("p");
+    label.className = "progress-label";
+    label.textContent = item.label;
+
+    card.append(value, label);
+    progressGrid.append(card);
+  });
+}
+
+function renderPracticePanel() {
+  const inQuiz = state.activeView === "quiz" && state.quiz;
+  practicePanel.hidden = !inQuiz;
+  if (!inQuiz) {
+    return;
+  }
+
+  const items = getCurrentItems();
+  practiceTitle.textContent = `${getCurrentModeSet().label}练习`;
+  practiceCopy.textContent = state.quiz.prompt;
+  practiceNextButton.hidden = !state.quiz.answered;
+
+  practiceOptions.innerHTML = "";
+  state.quiz.optionIndices.forEach((optionIndex) => {
+    const item = items[optionIndex];
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "practice-option";
+    if (state.quiz.answered && optionIndex === state.quiz.correctIndex) {
+      button.classList.add("is-correct");
+    } else if (state.quiz.answered && optionIndex === state.quiz.selectedIndex) {
+      button.classList.add("is-wrong");
+    }
+    button.disabled = state.quiz.answered;
+    button.addEventListener("click", () => {
+      submitQuizAnswer(optionIndex);
+    });
+
+    const label = document.createElement("span");
+    label.className = "practice-option-label";
+    label.textContent = item.primary;
+
+    const copy = document.createElement("span");
+    copy.className = "practice-option-copy";
+    copy.textContent = item.secondary ?? item.detail ?? getCurrentModeSet().cardLabel;
+
+    button.append(label, copy);
+    practiceOptions.append(button);
+  });
 }
 
 function renderDeckTypeButtons() {
@@ -984,38 +1467,52 @@ function renderCard() {
   const items = getCurrentItems();
   const index = getCurrentIndex();
   const item = items[index];
-  const visualLength = `${item.primary}${item.secondary ?? ""}`.length;
+  const quizPending = state.activeView === "quiz" && state.quiz && !state.quiz.answered;
+  const displayPrimary = quizPending ? "?" : item.primary;
+  const displaySecondary = quizPending ? "" : item.secondary;
+  const displayDetail = quizPending ? "" : item.detail;
+  const visualLength = `${displayPrimary}${displaySecondary ?? ""}`.length;
 
   deckTitle.textContent = deck.label;
   deckDescription.textContent = mode.description ?? deck.description;
   cardCounter.textContent = `${index + 1} / ${items.length}`;
-  cardCategory.textContent = mode.cardLabel;
+  cardCategory.textContent = quizPending ? `${mode.cardLabel} · 听音练习` : mode.cardLabel;
   flashcard.dataset.deck = state.activeDeck;
   flashcard.dataset.mode = state.activeMode;
   syncGuideLines();
-  cardValue.textContent = item.primary;
+  cardValue.textContent = displayPrimary;
   flashcard.dataset.long = visualLength >= 4 ? "true" : "false";
 
-  if (item.secondary) {
+  if (displaySecondary) {
     cardSubvalue.hidden = false;
-    cardSubvalue.textContent = item.secondary;
+    cardSubvalue.textContent = displaySecondary;
   } else {
     cardSubvalue.hidden = true;
     cardSubvalue.textContent = "";
   }
 
-  if (item.detail) {
+  if (displayDetail) {
     cardDetail.hidden = false;
-    cardDetail.textContent = item.detail;
+    cardDetail.textContent = displayDetail;
   } else {
     cardDetail.hidden = true;
     cardDetail.textContent = "";
   }
 
-  applyCardLayout(item);
+  cardHint.textContent = quizPending ? "先听发音，再选正确答案" : "点击切换到下一张";
+  applyCardLayout({
+    ...item,
+    primary: displayPrimary,
+    secondary: displaySecondary,
+  });
 }
 
 function renderReference() {
+  if (state.activeView === "quiz") {
+    referenceGrid.hidden = true;
+    return;
+  }
+
   const deck = deckRegistry[state.activeDeck];
   const mode = getCurrentModeSet();
   const item = getCurrentItems()[getCurrentIndex()];
@@ -1075,6 +1572,12 @@ function renderReference() {
 }
 
 function renderCardList() {
+  if (state.activeView === "quiz") {
+    listDescription.textContent = "练习模式已开启";
+    cardList.innerHTML = "";
+    return;
+  }
+
   const mode = getCurrentModeSet();
   const items = getCurrentItems();
   const currentIndex = getCurrentIndex();
@@ -1095,29 +1598,50 @@ function renderCardList() {
 }
 
 function render() {
+  document.body.dataset.activeView = state.activeView;
+  const inQuiz = state.activeView === "quiz";
+  prevButton.hidden = inQuiz;
+  nextButton.hidden = inQuiz;
+  randomButton.textContent = inQuiz ? "换一题" : "随机一张";
   renderDeckTypeButtons();
+  renderPathButtons();
   renderModeButtons();
+  renderViewButtons();
   renderFonts();
   renderFullscreenButton();
   renderCard();
   renderCardList();
   renderReference();
+  renderPracticePanel();
   renderAudioButton();
+  renderProgress();
   syncStateToQuery();
 }
 
 function shiftCard(step) {
+  if (state.activeView === "quiz") {
+    return;
+  }
+
   stopCurrentAudio();
   showAudioStatus("");
   setCurrentIndex(getCurrentIndex() + step);
+  recordCurrentCardView(true);
   renderCard();
   renderCardList();
   renderReference();
   renderAudioButton();
+  renderProgress();
   syncStateToQuery();
 }
 
 function randomizeCard() {
+  if (state.activeView === "quiz") {
+    startQuizRound();
+    render();
+    return;
+  }
+
   const items = getCurrentItems();
   if (items.length <= 1) {
     return;
@@ -1141,6 +1665,9 @@ async function toggleFullscreen() {
 }
 
 flashcard.addEventListener("click", () => {
+  if (state.activeView === "quiz") {
+    return;
+  }
   shiftCard(1);
 });
 
@@ -1158,6 +1685,27 @@ randomButton.addEventListener("click", () => {
 
 audioButton.addEventListener("click", () => {
   playCurrentAudio();
+});
+
+resumeButton.addEventListener("click", () => {
+  restoreProgressState();
+  if (state.activeView === "quiz") {
+    startQuizRound();
+  }
+  render();
+});
+
+practiceAudioButton.addEventListener("click", () => {
+  if (!state.quiz) {
+    return;
+  }
+
+  playAudioFromConfig(getAudioConfigForItem(getCurrentItems()[state.quiz.correctIndex]), practiceFeedback);
+});
+
+practiceNextButton.addEventListener("click", () => {
+  startQuizRound();
+  render();
 });
 
 fullscreenButton.addEventListener("click", () => {
@@ -1205,9 +1753,28 @@ window.addEventListener("keydown", (event) => {
 
   if (event.code === "Space") {
     event.preventDefault();
-    playCurrentAudio();
+    if (state.activeView === "quiz" && state.quiz) {
+      playAudioFromConfig(getAudioConfigForItem(getCurrentItems()[state.quiz.correctIndex]), practiceFeedback);
+    } else {
+      playCurrentAudio();
+    }
+  }
+
+  if (state.activeView === "quiz" && /^[1-4]$/.test(event.key)) {
+    const option = state.quiz?.optionIndices?.[Number(event.key) - 1];
+    if (Number.isInteger(option)) {
+      event.preventDefault();
+      submitQuizAnswer(option);
+    }
   }
 });
 
+loadProgress();
+restoreProgressState();
+recordSessionIfNeeded();
 applyStateFromQuery();
+recordCurrentCardView(true);
+if (state.activeView === "quiz") {
+  startQuizRound();
+}
 render();

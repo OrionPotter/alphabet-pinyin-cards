@@ -389,6 +389,84 @@ button {
   border: 1px solid rgba(29, 43, 54, 0.08);
 }
 
+.path-list {
+  display: grid;
+  gap: 10px;
+}
+
+.path-button {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(29, 43, 54, 0.1);
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.path-button:hover,
+.path-button:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 107, 107, 0.42);
+  box-shadow: 0 10px 18px rgba(255, 107, 107, 0.16);
+}
+
+.path-button.is-active {
+  border-color: rgba(255, 107, 107, 0.48);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.18), rgba(255, 217, 61, 0.18));
+}
+
+.path-title {
+  font-weight: 700;
+}
+
+.path-copy {
+  font-size: 0.86rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.path-meta {
+  font-size: 0.8rem;
+  color: var(--accent-deep);
+}
+
+.progress-panel {
+  padding: 18px 22px;
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.progress-card {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(29, 43, 54, 0.08);
+}
+
+.progress-value {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.progress-label {
+  margin: 6px 0 0;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
 .meta-label {
   font-size: 1.02rem;
   font-weight: 700;
@@ -814,6 +892,87 @@ button {
   animation: chipBounce 0.6s var(--bounce-timing);
 }
 
+.practice-panel {
+  gap: 18px;
+}
+
+.practice-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.practice-audio-button,
+.practice-next-button {
+  min-width: 132px;
+}
+
+.practice-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.practice-option {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-height: 92px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(29, 43, 54, 0.1);
+  background: rgba(255, 255, 255, 0.74);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.practice-option:hover,
+.practice-option:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 107, 107, 0.46);
+  box-shadow: 0 12px 20px rgba(255, 107, 107, 0.16);
+}
+
+.practice-option.is-correct {
+  background: rgba(119, 221, 119, 0.22);
+  border-color: rgba(73, 168, 73, 0.55);
+}
+
+.practice-option.is-wrong {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(238, 90, 82, 0.5);
+}
+
+.practice-option-label {
+  font-family: var(--card-font);
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.practice-option-copy {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.practice-feedback {
+  margin: 0;
+}
+
+body[data-active-view="quiz"] .list-panel,
+body[data-active-view="quiz"] .reference-grid,
+body[data-active-view="quiz"] .tips {
+  display: none;
+}
+
+body[data-active-view="quiz"] .flashcard {
+  cursor: default;
+}
+
 @keyframes chipBounce {
   0% { transform: scale(1); }
   50% { transform: scale(1.15); }
@@ -890,6 +1049,11 @@ button {
 
   .tips {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .progress-grid,
+  .practice-options {
+    grid-template-columns: 1fr;
   }
 
   .reference-grid {
@@ -977,5 +1141,9 @@ button {
   .list-chip {
     flex: 1 1 calc(33.333% - 12px);
     min-width: 0;
+  }
+
+  .practice-head {
+    flex-direction: column;
   }
 }
